@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "BackGroundTest",
+    "slug": "BackGroundTest",
+    "version": "1.0.0",
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  },
+  "name": "BackGroundTest"
+}
