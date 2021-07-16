@@ -2,52 +2,35 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, Button } from 'react-native';
 import * as BackgroundFetch from 'expo-background-fetch';
 import * as TaskManager from 'expo-task-manager';
-import * as Location from 'expo-location';
 
-const BACKGROUND_FETCH_TASK = 'backgrdssgsrg';
+const BACKGROUND_FETCH_TASK = 'backg';
 
 // 1. Define the task by providing a name and the function that should be executed
 // Note: This needs to be called in the global scope (e.g outside of your React components)
-TaskManager.defineTask(BACKGROUND_FETCH_TASK, ({ data: { locations }, error }) => {
-  if (error) {
-    console.log('Error: ', error)
-    return;
-  }
-  Location.hasStartedLocationUpdatesAsync(BACKGROUND_FETCH_TASK)
-    .then(data => {
-      console.log(data)
-    })
-    console.log('Received new locations', locations);
+TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
+  const now = Date.now();
+
+  console.log(`Got background fetch call at date: ${new Date(now).toISOString()}`);
+
+  // Be sure to return the successful result type!
+  return BackgroundFetch.Result.NewData;
 });
 
 // 2. Register the task at some point in your app by providing the same name, and some configuration options for how the background fetch should behave
 // Note: This does NOT need to be in the global scope and CAN be used in your React components!
 async function registerBackgroundFetchAsync() {
-  const { status } = await Location.requestBackgroundPermissionsAsync();
-  if (status === 'granted') {
-    await Location.startLocationUpdatesAsync(BACKGROUND_FETCH_TASK, {
-      accuracy: Location.Accuracy.Highest,
-      timeInterval: 15000,
-      distanceInterval: 1,
-      deferredUpdatesInterval: 1,
-      deferredUpdatesDistance: 1,
-      showsBackgroundLocationIndicator: false,
-      foregroundService: {
-        notificationTitle: 'Inicialized background',
-        notificationBody: 'description',
-        notificationColor: '#RRGGBB'
-      },
-      pausesUpdatesAutomatically: false
-    });
-  }
+  return BackgroundFetch.registerTaskAsync(BACKGROUND_FETCH_TASK, {
+    minimumInterval: 60 * 15, // 15 minutes
+    stopOnTerminate: false, // android only,
+    startOnBoot: true, // android only
+  });
 }
 
 // 3. (Optional) Unregister tasks by specifying the task name
 // This will cancel any future background fetch calls that match the given name
 // Note: This does NOT need to be in the global scope and CAN be used in your React components!
 async function unregisterBackgroundFetchAsync() {
-  TaskManager.unregisterTaskAsync(BACKGROUND_FETCH_TASK)
-  return true
+  return BackgroundFetch.unregisterTaskAsync(BACKGROUND_FETCH_TASK);
 }
 
 export default function BackgroundFetchScreen() {
@@ -74,6 +57,7 @@ export default function BackgroundFetchScreen() {
 
     checkStatusAsync();
   };
+
   return (
     <View style={styles.screen}>
       <View style={styles.textContainer}>
@@ -97,7 +81,6 @@ export default function BackgroundFetchScreen() {
   );
 }
 
-/* @hide */
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
@@ -112,5 +95,3 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
-
-/* @end */
